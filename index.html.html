@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Normal Distribution Calculator (16:9)</title>
+  <style>
+    :root {
+      --primary-blue: #2563eb;
+      --primary-red: #ef4444;
+      --bg-gray: #f8fafc;
+      --card-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-gray);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+
+    /* 16:9 Aspect Ratio Container */
+    .widescreen-wrapper {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Legend Header */
+    .legend-container {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-math { background-color: var(--primary-blue); }
+    .dot-english { background-color: var(--primary-red); }
+
+    /* Canvas plot container */
+    .plot-container {
+      position: relative;
+      width: 100%;
+      flex-grow: 1;
+      min-height: 180px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Summary Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 0;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 2px;
+      color: #0f172a;
+    }
+
+    /* Subject Profile Selector */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .profile-toggle {
+      display: flex;
+      background-color: #f1f5f9;
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active {
+      background-color: var(--primary-blue);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Sliders */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 10px 0;
+    }
+
+    .control-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary-blue);
+      cursor: pointer;
+    }
+
+    .value-display {
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 24px;
+      text-align: right;
+    }
+
+    /* Desmos Box */
+    .desmos-box {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .desmos-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #166534;
+    }
+
+    .desmos-code {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #2563eb;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="widescreen-wrapper">
+    <!-- Top Legend -->
+    <div class="legend-container">
+      <div class="legend-item">
+        <span class="dot dot-math"></span> Mathematics (&mu;=66, &sigma;=8)
+      </div>
+      <div class="legend-item">
+        <span class="dot dot-english"></span> English (&mu;=75, &sigma;=10)
+      </div>
+    </div>
+
+    <!-- Canvas Plot -->
+    <div class="plot-container">
+      <canvas id="normalCanvas"></canvas>
+    </div>
+
+    <!-- Metrics Bar -->
+    <div class="metrics-grid">
+      <div>
+        <div class="metric-label">Z-Score</div>
+        <div class="metric-value" id="zScoreVal">+1.00</div>
+      </div>
+      <div>
+        <div class="metric-label">Percentile</div>
+        <div class="metric-value" id="percentileVal">84.1%</div>
+      </div>
+      <div>
+        <div class="metric-label">Probability</div>
+        <div class="metric-value" id="probVal">P(Z &le; z) = 0.8413</div>
+      </div>
+    </div>
+
+    <!-- Controls Container -->
+    <div>
+      <div class="section-title">Select Subject Profile</div>
+      <div class="profile-toggle">
+        <button class="toggle-btn" id="btnMath" onclick="selectProfile('Math')">Mathematics</button>
+        <button class="toggle-btn active" id="btnEnglish" onclick="selectProfile('English')">English</button>
+      </div>
+
+      <!-- Sliders -->
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Score (X)</label>
+          <div class="slider-row">
+            <input type="range" id="sliderX" min="30" max="120" value="85" oninput="updateCalculations()">
+            <span class="value-display" id="dispX">85</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Mean (&mu;)</label>
+          <div class="slider-row">
+            <input type="range" id="sliderMu" min="40" max="100" value="75" oninput="updateCalculations()">
+            <span class="value-display" id="dispMu">75</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Std Dev (&sigma;)</label>
+          <div class="slider-row">
+            <input type="range" id="sliderSigma" min="1" max="25" value="10" oninput="updateCalculations()">
+            <span class="value-display" id="dispSigma">10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desmos Helper -->
+    <div class="desmos-box">
+      <div class="desmos-header">
+        <span>&#9432;</span> How to input this in Desmos:
+      </div>
+      <div class="desmos-code" id="desmosCode">normaldist(75, 10)</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('normalCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function normalCDF(z) {
+      const absZ = Math.abs(z);
+      const t = 1.0 / (1.0 + 0.2316419 * absZ);
+      const d = 0.3989422804014327 * Math.exp(-absZ * absZ / 2.0);
+      const prob = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+      return z > 0 ? 1.0 - prob : prob;
+    }
+
+    let activeProfile = 'English';
+
+    function selectProfile(subject) {
+      activeProfile = subject;
+      document.getElementById('btnMath').classList.toggle('active', subject === 'Math');
+      document.getElementById('btnEnglish').classList.toggle('active', subject === 'English');
+
+      if (subject === 'Math') {
+        document.getElementById('sliderX').value = 78;
+        document.getElementById('sliderMu').value = 66;
+        document.getElementById('sliderSigma').value = 8;
+      } else {
+        document.getElementById('sliderX').value = 85;
+        document.getElementById('sliderMu').value = 75;
+        document.getElementById('sliderSigma').value = 10;
+      }
+      updateCalculations();
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function drawPlot(X, mu, sigma, color) {
+      const width = canvas.getBoundingClientRect().width;
+      const height = canvas.getBoundingClientRect().height;
+      
+      ctx.clearRect(0, 0, width, height);
+
+      const paddingLeft = 35;
+      const paddingRight = 35;
+      const paddingTop = 25;
+      const paddingBottom = 45;
+      const plotWidth = width - paddingLeft - paddingRight;
+      const plotHeight = height - paddingTop - paddingBottom;
+      const baselineY = height - paddingBottom;
+
+      const minX = mu - 3.8 * sigma;
+      const maxX = mu + 3.8 * sigma;
+
+      function getCanvasX(val) {
+        return paddingLeft + ((val - minX) / (maxX - minX)) * plotWidth;
+      }
+
+      function getCanvasY(yVal) {
+        const maxY = 1 / (sigma * Math.sqrt(2 * Math.PI));
+        return baselineY - (yVal / maxY) * (plotHeight - 10);
+      }
+
+      function gaussian(x) {
+        return (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(getCanvasX(minX), baselineY);
+      const step = (maxX - minX) / 300;
+      for (let x = minX; x <= Math.min(X, maxX); x += step) {
+        ctx.lineTo(getCanvasX(x), getCanvasY(gaussian(x)));
+      }
+      ctx.lineTo(getCanvasX(Math.min(X, maxX)), baselineY);
+      ctx.closePath();
+      ctx.fillStyle = activeProfile === 'English' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(37, 99, 235, 0.15)';
+      ctx.fill();
+
+      ctx.beginPath();
+      for (let x = minX; x <= maxX; x += step) {
+        const cx = getCanvasX(x);
+        const cy = getCanvasY(gaussian(x));
+        if (x === minX) ctx.moveTo(cx, cy);
+        else ctx.lineTo(cx, cy);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      const scoreCanvasX = getCanvasX(X);
+      const scoreCanvasY = getCanvasY(gaussian(X));
+      
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.moveTo(scoreCanvasX, baselineY);
+      ctx.lineTo(scoreCanvasX, scoreCanvasY);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.arc(scoreCanvasX, scoreCanvasY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      const labelText = `X=${X}`;
+      ctx.font = 'bold 11px sans-serif';
+      const textWidth = ctx.measureText(labelText).width;
+      const badgePadding = 5;
+      const badgeW = textWidth + badgePadding * 2;
+      const badgeH = 18;
+      const badgeX = scoreCanvasX - badgeW / 2;
+      const badgeY = scoreCanvasY - badgeH - 6;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelText, scoreCanvasX, badgeY + badgeH / 2);
+
+      ctx.beginPath();
+      ctx.moveTo(paddingLeft - 10, baselineY);
+      ctx.lineTo(width - paddingRight + 10, baselineY);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      const sigmaTicks = [-3, -2, -1, 0, 1, 2, 3];
+      ctx.textAlign = 'center';
+
+      sigmaTicks.forEach(k => {
+        const val = Math.round(mu + k * sigma);
+        const tx = getCanvasX(val);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(val, tx, baselineY + 14);
+
+        let subText = k === 0 ? 'μ' : (k > 0 ? `+${k}σ` : `${k}σ`);
+        ctx.font = k === 0 ? 'bold 10px serif' : '10px sans-serif';
+        ctx.fillStyle = k === 0 ? color : '#94a3b8';
+        ctx.fillText(subText, tx, baselineY + 26);
+      });
+    }
+
+    function updateCalculations() {
+      const X = parseFloat(document.getElementById('sliderX').value);
+      const mu = parseFloat(document.getElementById('sliderMu').value);
+      const sigma = parseFloat(document.getElementById('sliderSigma').value);
+
+      document.getElementById('dispX').innerText = X;
+      document.getElementById('dispMu').innerText = mu;
+      document.getElementById('dispSigma').innerText = sigma;
+
+      const z = (X - mu) / sigma;
+      const prob = normalCDF(z);
+      const percentile = prob * 100;
+
+      const sign = z >= 0 ? '+' : '';
+      document.getElementById('zScoreVal').innerText = `${sign}${z.toFixed(2)}`;
+      document.getElementById('percentileVal').innerText = `${percentile.toFixed(1)}%`;
+      document.getElementById('probVal').innerText = `P(Z \u2264 z) = ${prob.toFixed(4)}`;
+      document.getElementById('desmosCode').innerText = `normaldist(${mu},${sigma})`;
+
+      const strokeColor = activeProfile === 'English' ? '#ef4444' : '#2563eb';
+      drawPlot(X, mu, sigma, strokeColor);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      updateCalculations();
+    });
+
+    resizeCanvas();
+    updateCalculations();
+  </script>
+</body>
+</html>
